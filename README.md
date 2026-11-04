@@ -32,8 +32,98 @@
 
 ---
 
-## 3. Выполнение практического примера
-*(В оригинальной методичке базовый пример рассматривался на сущности "Товары". В рамках данной работы мы сразу переходим к индивидуальному заданию, так как базовый пример был разобран на практике).*
+## 3. Выполнение практического примера (Сущность "Товары")
+
+В качестве базового примера реализован CRUD для товаров.
+
+**Код сервера (`app_items.js`):**
+```javascript
+const express = require('express');
+const app = express();
+const port = 3001; // Используем другой порт, чтобы не мешал студентам
+
+app.use(express.json());
+
+let items = [
+  { id: 1, name: 'Товар 1', price: 100, quantity: 5 },
+  { id: 2, name: 'Товар 2', price: 200, quantity: 3 },
+  { id: 3, name: 'Товар 3', price: 300, quantity: 10 }
+];
+let nextId = 4;
+
+// GET все
+app.get('/items', (req, res) => {
+  res.json({ count: items.length, items: items });
+});
+
+// GET один
+app.get('/items/:id', (req, res) => {
+  const item = items.find(i => i.id === parseInt(req.params.id));
+  if (!item) return res.status(404).json({ error: 'Элемент не найден' });
+  res.json(item);
+});
+
+// POST создать
+app.post('/items', (req, res) => {
+  const { name, price, quantity } = req.body;
+  if (!name || price === undefined) {
+    return res.status(400).json({ error: 'Поля name и price обязательны' });
+  }
+  const newItem = { id: nextId++, name, price, quantity: quantity || 0 };
+  items.push(newItem);
+  res.status(201).json(newItem);
+});
+
+// PUT обновить
+app.put('/items/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = items.findIndex(i => i.id === id);
+  if (index === -1) return res.status(404).json({ error: 'Элемент не найден' });
+  
+  const { name, price, quantity } = req.body;
+  items[index] = {
+    id: id,
+    name: name || items[index].name,
+    price: price !== undefined ? price : items[index].price,
+    quantity: quantity !== undefined ? quantity : items[index].quantity
+  };
+  res.json(items[index]);
+});
+
+// DELETE удалить
+app.delete('/items/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = items.findIndex(i => i.id === id);
+  if (index === -1) return res.status(404).json({ error: 'Элемент не найден' });
+  
+  const deletedItem = items.splice(index, 1)[0];
+  res.json({ message: 'Элемент удалён', deleted: deletedItem });
+});
+
+app.use((req, res) => res.status(404).json({ error: 'Маршрут не найден' }));
+
+app.listen(port, () => {
+  console.log(`Сервер ТОВАРОВ запущен на http://localhost:${port}`);
+});
+```
+
+**Скриншоты работы эндпоинтов (Товары):**
+
+**1. GET All Items (получение всех товаров)**
+*Запрос:* `GET http://localhost:3001/items`
+![Результат](screenshots/items.jpg)
+
+**2. POST Create Item (создание товара)**
+*Запрос:* `POST http://localhost:3001/items`
+![Результат](screenshots/create_items.jpg)
+
+**3. PUT Update Item (обновление товара)**
+*Запрос:* `PUT http://localhost:3001/items/1`
+![Результат](screenshots/update_items.jpg)
+
+**4. DELETE Item (удаление товара)**
+*Запрос:* `DELETE http://localhost:3001/items/3`
+![Результат](screenshots/delete_items.jpg)
 
 ---
 
